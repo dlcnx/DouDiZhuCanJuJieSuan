@@ -23,7 +23,7 @@ def color_print(text: str, color: str = "", bold: bool = False, end: str = "\n")
         prefix += Colors.BOLD
     print(f"{prefix}{text}{Colors.RESET}", end=end)
 
-def get_card_move(hand: Cards, last_move: CardMove, prompt: str = "") -> CardMove:
+def get_card_move(hand: Cards, last_move: CardMove, prompt: str = "", pre_input: str = None) -> CardMove:
     """从用户输入获取合法出牌
 
     用户输入牌面字符匹配出牌，按回车表示PASS（若合法），
@@ -38,7 +38,8 @@ def get_card_move(hand: Cards, last_move: CardMove, prompt: str = "") -> CardMov
     while True:
         if prompt:
             color_print(f"{prompt}: ", Colors.YELLOW, end="")
-        move_input = input().strip()
+        move_input = pre_input if pre_input is not None else input().strip()
+        pre_input = None
 
         for c in move_input:
             if c == 'e':
@@ -89,8 +90,12 @@ def play_one_round():
         enemycards = Cards(input().strip())
 
         color_print("敌方出牌(若我方先出请按回车): ", Colors.YELLOW, end="")
-        last_move = get_card_move(enemycards, CardMove(MoveType.INVALID))
-        enemycards.remove(last_move.get_all_cards())
+        initial_input = input().strip()
+        if initial_input == "":
+            last_move = CardMove(MoveType.INVALID)
+        else:
+            last_move = get_card_move(enemycards, CardMove(MoveType.INVALID), pre_input=initial_input)
+            enemycards.remove(last_move.get_all_cards())
 
         game = GameCore(ourcards, enemycards, last_move)
         enemy_last_display = last_move
@@ -107,10 +112,7 @@ def play_one_round():
 
             color_print(f">> 我出: {action.move}", Colors.GREEN + Colors.BOLD)
             game.play_card(action.move)
-            if action.move.get_type() != MoveType.PASS:
-                last_move = action.move
-            else:
-                last_move = CardMove(MoveType.INVALID)
+            last_move = action.move
 
             if game.is_game_over():
                 break
@@ -119,10 +121,7 @@ def play_one_round():
             color_print("敌方出牌: ", Colors.YELLOW, end="")
             enemy_move = get_card_move(game.get_enemy_hand(), last_move)
             game.play_card(enemy_move)
-            if enemy_move.get_type() == MoveType.PASS:
-                last_move = CardMove(MoveType.INVALID)
-            else:
-                last_move = enemy_move
+            last_move = enemy_move
             enemy_last_display = enemy_move
 
         print()

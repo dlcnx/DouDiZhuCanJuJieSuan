@@ -140,6 +140,8 @@ def calculate_best_action(status: GameStatus) -> BestAction:
     if not move_list:
         raise RuntimeError("No valid moves available, should not reach here")
 
+    move_list.sort(key=lambda m: m.get_all_card_num(), reverse=True)
+
     cur_player_card_num = status.get_cur_player_card_num()
     for move in move_list:
         if cur_player_card_num == move.get_all_card_num():

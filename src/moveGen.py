@@ -246,7 +246,7 @@ def gen_all_moves(hand: Cards, last_move: CardMove) -> List[CardMove]:
     elif last_type == MoveType.SERIAL_THREE_TWO:
         add_moves(gen_serial_three_two(hand))
 
-    if last_move.get_type() != MoveType.PASS:
+    if last_move.get_type() not in (MoveType.PASS, MoveType.INVALID):
         result.append(CardMove(MoveType.PASS))
 
     from cardMove import moveCompareResult
