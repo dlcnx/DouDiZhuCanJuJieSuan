@@ -23,11 +23,15 @@ def color_print(text: str, color: str = "", bold: bool = False, end: str = "\n")
         prefix += Colors.BOLD
     print(f"{prefix}{text}{Colors.RESET}", end=end)
 
+class RestartRound(Exception):
+    """用户按下e，放弃当前对局重新开始"""
+    pass
+
 def get_card_move(hand: Cards, last_move: CardMove, prompt: str = "", pre_input: str = None) -> CardMove:
     """从用户输入获取合法出牌
 
     用户输入牌面字符匹配出牌，按回车表示PASS（若合法），
-    输入e退出程序，若匹配多个出牌则让用户选择
+    输入e放弃当前对局，若匹配多个出牌则让用户选择
     """
     from moveGen import gen_all_moves
 
@@ -41,9 +45,8 @@ def get_card_move(hand: Cards, last_move: CardMove, prompt: str = "", pre_input:
         move_input = pre_input if pre_input is not None else input().strip()
         pre_input = None
 
-        for c in move_input:
-            if c == 'e':
-                raise RuntimeError("用户选择退出计算")
+        if move_input.lower() == 'e':
+            raise RestartRound()
 
         if move_input == "":
             pass_move = CardMove(MoveType.PASS)
@@ -81,16 +84,24 @@ def play_one_round():
         color_print("=" * 40, Colors.BLUE)
         color_print("        斗地主残局计算器", Colors.BOLD + Colors.CYAN)
         color_print("=" * 40, Colors.BLUE)
-        color_print("提示: 0=10, x=小王, d=大王", Colors.DIM)
+        color_print("提示: 0=10, x=小王, d=大王, e=放弃本局", Colors.DIM)
 
         color_print("\n请输入我方手牌: ", Colors.YELLOW, end="")
-        ourcards = Cards(input().strip())
+        our_input = input().strip()
+        if our_input.lower() == 'e':
+            raise RestartRound()
+        ourcards = Cards(our_input)
 
         color_print("请输入敌方手牌: ", Colors.YELLOW, end="")
-        enemycards = Cards(input().strip())
+        enemy_input = input().strip()
+        if enemy_input.lower() == 'e':
+            raise RestartRound()
+        enemycards = Cards(enemy_input)
 
         color_print("敌方出牌(若我方先出请按回车): ", Colors.YELLOW, end="")
         initial_input = input().strip()
+        if initial_input.lower() == 'e':
+            raise RestartRound()
         if initial_input == "":
             last_move = CardMove(MoveType.INVALID)
         else:
@@ -133,6 +144,9 @@ def play_one_round():
 
         return True
 
+    except RestartRound:
+        color_print("\n放弃当前对局", Colors.YELLOW)
+        return True
     except KeyboardInterrupt:
         color_print("\n用户退出", Colors.YELLOW)
         return False
