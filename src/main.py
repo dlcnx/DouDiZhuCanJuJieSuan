@@ -13,6 +13,7 @@ class Colors:
     BLUE = '\033[94m'
     CYAN = '\033[96m'
     WHITE = '\033[97m'
+    ORANGE = '\033[38;5;208m'
     BOLD = '\033[1m'
     DIM = '\033[2m'
 
@@ -128,12 +129,20 @@ def play_one_round():
             if game.is_game_over():
                 break
 
-            color_print(f"敌方上次: {enemy_last_display}", Colors.DIM)
-            color_print("敌方出牌: ", Colors.YELLOW, end="")
-            enemy_move = get_card_move(game.get_enemy_hand(), last_move)
-            game.play_card(enemy_move)
-            last_move = enemy_move
-            enemy_last_display = enemy_move
+            from moveGen import gen_all_moves
+            enemy_possible = gen_all_moves(game.get_enemy_hand(), last_move)
+            if len(enemy_possible) == 1 and enemy_possible[0].get_type() == MoveType.PASS:
+                color_print("敌方PASS", Colors.ORANGE)
+                game.play_card(enemy_possible[0])
+                last_move = enemy_possible[0]
+                enemy_last_display = enemy_possible[0]
+            else:
+                color_print(f"敌方上次: {enemy_last_display}", Colors.DIM)
+                color_print("敌方出牌: ", Colors.YELLOW, end="")
+                enemy_move = get_card_move(game.get_enemy_hand(), last_move)
+                game.play_card(enemy_move)
+                last_move = enemy_move
+                enemy_last_display = enemy_move
 
         print()
         color_print(f"我: {game.get_our_hand()} | 敌: {game.get_enemy_hand()}", Colors.DIM)
